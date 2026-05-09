@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 政策解读程序</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-blue-600 text-white shadow-md py-4">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                AI 政策智能解读
+            </h1>
+            <p class="text-blue-100 mt-1 text-sm">上传政策文件、网页链接或直接粘贴文本，大模型将为您进行多维度深度分析</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 步骤指示器 -->
+        <div class="flex items-center justify-center mb-8">
+            <div class="flex items-center text-blue-600">
+                <div class="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-bold">1</div>
+                <span class="ml-2 font-medium">输入资料</span>
+            </div>
+            <div class="w-16 h-1 bg-gray-300 mx-4" id="step-line-1"></div>
+            <div class="flex items-center text-gray-400" id="step-2">
+                <div class="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-bold">2</div>
+                <span class="ml-2 font-medium">智能分析</span>
+            </div>
+            <div class="w-16 h-1 bg-gray-300 mx-4" id="step-line-2"></div>
+            <div class="flex items-center text-gray-400" id="step-3">
+                <div class="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center font-bold">3</div>
+                <span class="ml-2 font-medium">查看报告</span>
+            </div>
+        </div>
+
+        <!-- 面板 1: 输入资料 -->
+        <div id="panel-input" class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px" aria-label="Tabs">
+                    <button class="w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm border-blue-500 text-blue-600" id="tab-text" onclick="switchTab('text')">粘贴文本</button>
+                    <button class="w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="tab-file" onclick="switchTab('file')">上传文件</button>
+                    <button class="w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="tab-url" onclick="switchTab('url')">网页链接</button>
+                </nav>
+            </div>
+            
+            <div class="p-6">
+                <!-- 文本输入框 -->
+                <div id="content-text">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">直接粘贴政策全文</label>
+                    <textarea id="text-input" rows="8" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-3" placeholder="在此粘贴需要分析的政策文本内容..."></textarea>
+                </div>
+                
+                <!-- 文件上传框 -->
+                <div id="content-file" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">上传 PDF 或 TXT 文件</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:bg-gray-50 cursor-pointer" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <span class="relative rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                    <span>点击上传</span>
+                                    <input id="file-input" name="file-input" type="file" class="sr-only" multiple accept=".pdf,.txt">
+                                </span>
+                                <p class="pl-1">或拖拽文件到这里</p>
+                            </div>
+                            <p class="text-xs text-gray-500">支持 PDF, TXT (最大 10MB)</p>
+                        </div>
+                    </div>
+                    <ul id="file-list" class="mt-4 space-y-2"></ul>
+                </div>
+                
+                <!-- URL 输入框 -->
+                <div id="content-url" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">输入包含政策内容的网页链接 (每行一个)</label>
+                    <textarea id="url-input" rows="5" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-3" placeholder="https://www.gov.cn/zhengce/...&#10;http://www.nrta.gov.cn/..."></textarea>
+                </div>
+            </div>
+            
+            <!-- 视角选择 -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <label for="audience-select" class="block text-sm font-medium text-gray-700 mb-2">选择解读受众视角（AI大模型将根据您选择的视角定制报告风格）：</label>
+                <select id="audience-select" class="block w-full max-w-md rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                    <option value="通用视角">通用视角（默认）</option>
+                    <option value="政府决策监管层">政府决策监管层</option>
+                    <option value="企业战略与高管">企业战略与高管</option>
+                    <option value="研发与技术团队">研发与技术团队</option>
+                    <option value="市场与营销团队">市场与营销团队</option>
+                </select>
+            </div>
+            
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button id="btn-start" onclick="startAnalysis()" class="bg-blue-600 border border-transparent rounded-md shadow-sm py-2 px-6 inline-flex justify-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    开始智能分析
+                </button>
+            </div>
+        </div>
+
+        <!-- 面板 2: 分析进度 -->
+        <div id="panel-progress" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+            <div class="p-8 text-center">
+                <h2 class="text-xl font-bold mb-6" id="progress-title">AI 大模型正在深度解读...</h2>
+                
+                <!-- 进度条 -->
+                <div class="relative pt-1 max-w-xl mx-auto mb-8">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200" id="stage-badge">
+                                准备中
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold inline-block text-blue-600" id="progress-pct">
+                                0%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                        <div id="progress-bar" style="width: 0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"></div>
+                    </div>
+                    
+                    <p class="text-gray-500 text-sm mt-2" id="progress-msg">正在初始化分析引擎...</p>
+                </div>
+                
+                <!-- 阶段流 -> -->
+                <div class="grid grid-cols-5 gap-2 text-xs font-medium text-gray-400 mt-8 max-w-2xl mx-auto" id="stage-tracker">
+                    <div class="text-center" id="tracker-step-1">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-1 shadow-sm border border-gray-200">📄</div>
+                        材料理解
+                    </div>
+                    <div class="text-center" id="tracker-step-2">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-1 shadow-sm border border-gray-200">🔍</div>
+                        深度分析
+                    </div>
+                    <div class="text-center" id="tracker-step-3">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-1 shadow-sm border border-gray-200">⚠️</div>
+                        风险情景
+                    </div>
+                    <div class="text-center" id="tracker-step-4">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-1 shadow-sm border border-gray-200">💼</div>
+                        商业影响
+                    </div>
+                    <div class="text-center" id="tracker-step-5">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-1 shadow-sm border border-gray-200">📊</div>
+                        生成报告
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 px-6 py-4 border-t border-blue-100 text-sm text-blue-800 flex items-start">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                <p>整个分析过程需要 1-3 分钟，视材料长度和网络情况而定，请耐心等待。LLM 正在执行逐行阅读和多维度推理...</p>
+            </div>
+        </div>
+
+        <!-- 面板 3: 结果错误 -->
+        <div id="panel-error" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+            <div class="p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                    <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">分析过程出错</h2>
+                <p class="text-gray-500 mb-6" id="error-message">在调用大模型或处理文件时发生错误。</p>
+                <button onclick="resetApp()" class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-gray-700 hover:bg-gray-50">返回重新开始</button>
+            </div>
+        </div>
+
+        <!-- 面板 4: 分析完成 -->
+        <div id="panel-success" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+            <div class="p-8 text-center border-b border-gray-200">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">深度分析已完成！</h2>
+                <p class="text-gray-500" id="success-title">《政策报告》</p>
+            </div>
+            
+            <div class="p-8 bg-gray-50">
+                <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                    <a id="btn-view-report" href="#" target="_blank" class="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-blue-50 hover:border-blue-300 transition-colors">
+                        <svg class="w-10 h-10 text-blue-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="text-lg font-medium text-gray-900">查看交互式报告</span>
+                        <span class="text-sm text-gray-500 mt-1">在新窗口中打开 HTML 报告</span>
+                    </a>
+                    
+                    <a id="btn-download-json" href="#" download class="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                        <svg class="w-10 h-10 text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span class="text-lg font-medium text-gray-900">下载 JSON 数据</span>
+                        <span class="text-sm text-gray-500 mt-1">获取原始大模型结构化输出</span>
+                    </a>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button onclick="resetApp()" class="text-blue-600 hover:text-blue-800 font-medium">← 分析另一份文件</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>

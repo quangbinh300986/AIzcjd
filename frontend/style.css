@@ -1,0 +1,38 @@
+/* 基础自定义样式 */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 进度条动画 */
+#progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* 状态追踪器高亮状态 */
+.tracker-active .rounded-full {
+    background-color: #eff6ff; /* blue-50 */
+    border-color: #3b82f6; /* blue-500 */
+    color: #2563eb; /* blue-600 */
+}
+
+.tracker-active {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.tracker-done .rounded-full {
+    background-color: #22c55e; /* green-500 */
+    border-color: #22c55e;
+    color: white;
+}
+
+.tracker-done {
+    color: #16a34a; /* green-600 */
+}
+
+/* 文件拖拽高亮 */
+.drag-active {
+    border-color: #3b82f6 !important;
+    background-color: #eff6ff !important;
+}
