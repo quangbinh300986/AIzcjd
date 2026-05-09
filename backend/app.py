@@ -11,17 +11,26 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import sys
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 class AnalyzeRequest(BaseModel):
     audience: str = "通用视角"
 
 from config import FRONTEND_DIR, OUTPUT_DIR, UPLOAD_DIR
-from core.content_extractor import extract_content
-from core.policy_analyzer import analyze_policy
-from reports.html_report import generate_html_report
+from api.services.task_runner import TaskRunner
 from task_store import task_store
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("app_error.log", encoding="utf-8")
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # 创建应用
@@ -118,60 +127,39 @@ async def run_analysis_pipeline(task_id: str):
             
         task_store.update(task_id, status="running", progress=0, current_stage="准备中")
         
-        # 1. 提取所有内容并合并
-        all_content = []
-        
-        # 处理文件
-        for file_info in task.get("files", []):
-            task_store.update(task_id, current_stage="提取文件内容", message=f"正在读取 {file_info['filename']}")
-            text = await extract_content(file_path=file_info["path"])
-            if text:
-                all_content.append(text)
-                
-        # 处理 URL
-        for url in task.get("urls", []):
-            task_store.update(task_id, current_stage="提取网页内容", message=f"正在抓取 {url}")
-            text = await extract_content(url=url)
-            if text:
-                all_content.append(text)
-                
-        merged_content = "\n\n---\n\n".join(all_content)
-        
-        if not merged_content.strip():
-            raise ValueError("未能提取到任何有效的文本内容")
+        # 将 audience 映射给 user_focus
+        task_data = task.copy()
+        if "audience" in task_data:
+            task_data["user_focus"] = task_data["audience"]
             
-        # 2. 执行分析
+        runner = TaskRunner(task_id, task_data, OUTPUT_DIR / task_id)
+        
         def progress_callback(stage, progress, message):
             task_store.update(task_id, current_stage=stage, progress=progress, message=message)
             
-        audience = task.get("audience", "通用视角")
-        result = await analyze_policy(merged_content, progress_callback, audience=audience)
+        await runner.run(on_progress=progress_callback)
         
-        # 3. 生成 HTML 报告
-        task_store.update(task_id, current_stage="生成报告", progress=90, message="正在生成可视化报告...")
-        
-        report_filename = f"report_{task_id}.html"
-        report_path = OUTPUT_DIR / task_id / report_filename
-        generate_html_report(result, report_path)
-        
-        # 保存 JSON 结果
-        json_path = OUTPUT_DIR / task_id / f"result_{task_id}.json"
-        json_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
+        # 兼容旧版前端字段结构
+        runner_result = runner.get_result()
+        if runner_result.get("success"):
+            outputs = runner_result.get("outputs", {})
+            result_payload = {
+                "report_url": outputs.get("html", {}).get("url", ""),
+                "json_url": outputs.get("analysis_json", {}).get("url", ""),
+                "pdf_url": outputs.get("pdf", {}).get("url", ""),
+                "title": runner_result.get("summary", {}).get("title", ""),
+                "summary": runner_result.get("summary", {})
+            }
+        else:
+            result_payload = runner_result
             
-        # 4. 更新完成状态
         task_store.update(
             task_id, 
             status="completed", 
             progress=100, 
             current_stage="完成", 
             message="分析全部完成",
-            result={
-                "report_url": f"/outputs/{task_id}/{report_filename}",
-                "json_url": f"/outputs/{task_id}/result_{task_id}.json",
-                "title": result.get("title", "")
-            }
+            result=result_payload
         )
         
     except Exception as e:
@@ -246,3 +234,5 @@ if __name__ == "__main__":
     import uvicorn
     from config import HOST, PORT
     uvicorn.run("app:app", host=HOST, port=PORT, reload=True)
+# Trigger reload
+# Trigger reload 2

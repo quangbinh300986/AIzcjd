@@ -1,0 +1,66 @@
+2026-05-09 17:27:58,202 - app - ERROR - 任务 25b59bc4 分析失败
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\app.py", line 136, in run_analysis_pipeline
+    await runner.run(on_progress=progress_callback)
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 342, in run
+    material_path = await self._extract_content()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 140, in _extract_content
+    returncode, stdout, stderr = await self._run_script("content_extractor.py", args)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 90, in _run_script
+    process = await asyncio.create_subprocess_exec(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2026-05-09 17:28:30,739 - app - ERROR - 任务 fdc37577 分析失败
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\app.py", line 136, in run_analysis_pipeline
+    await runner.run(on_progress=progress_callback)
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 342, in run
+    material_path = await self._extract_content()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 140, in _extract_content
+    returncode, stdout, stderr = await self._run_script("content_extractor.py", args)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 90, in _run_script
+    process = await asyncio.create_subprocess_exec(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2026-05-09 17:31:04,374 - app - ERROR - 任务 35de4db7 分析失败
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\app.py", line 140, in run_analysis_pipeline
+    await runner.run(on_progress=progress_callback)
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 342, in run
+    material_path = await self._extract_content()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 140, in _extract_content
+    returncode, stdout, stderr = await self._run_script("content_extractor.py", args)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 90, in _run_script
+    process = await asyncio.create_subprocess_exec(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError

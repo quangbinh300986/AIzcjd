@@ -12,4 +12,9 @@ dependencies = [
     "pdfplumber>=0.10.0",
     "beautifulsoup4>=4.12.0",
     "lxml>=5.0.0",
+    "playwright>=1.59.0",
+    "pymupdf>=1.27.2.3",
+    "reportlab>=4.5.0",
+    "pillow>=12.2.0",
+    "aiofiles>=25.1.0",
 ]

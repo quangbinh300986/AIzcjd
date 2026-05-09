@@ -3,6 +3,8 @@ let currentMode = 'text'; // text, file, url
 let selectedFiles = [];
 let currentTaskId = null;
 let eventSource = null;
+let analysisStartTime = null; // 分析开始时间
+let timerInterval = null;    // 计时器
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -146,6 +148,10 @@ async function startAnalysis() {
         document.getElementById('panel-input').classList.add('hidden');
         document.getElementById('panel-progress').classList.remove('hidden');
         
+        // 启动计时器
+        analysisStartTime = Date.now();
+        startTimer();
+        
         // 更新顶部步骤
         document.getElementById('step-2').className = "flex items-center text-blue-600";
         document.getElementById('step-line-1').className = "w-16 h-1 bg-blue-600 mx-4";
@@ -172,13 +178,17 @@ function connectSSE(taskId) {
     
     eventSource.addEventListener('completed', (e) => {
         const data = JSON.parse(e.data);
-        updateProgressUI({ progress: 100, current_stage: "完成", message: "生成报告完毕" });
+        updateProgressUI({ progress: 100, current_stage: "完成", message: "所有分析全部完成!" });
+        appendLog("DONE", "分析全部完成! 报告已准备就绪", "text-green-300");
+        stopTimer();
         showSuccess(data.result);
         eventSource.close();
     });
     
     eventSource.addEventListener('failed', (e) => {
         const data = JSON.parse(e.data);
+        appendLog("ERROR", `分析失败: ${data.error || '未知错误'}`, "text-red-400");
+        stopTimer();
         showError(data.error);
         eventSource.close();
     });
@@ -198,19 +208,80 @@ function updateProgressUI(data) {
     document.getElementById('stage-badge').innerText = data.current_stage || "处理中";
     document.getElementById('progress-msg').innerText = data.message || "请稍候...";
     
+    // 追加日志
+    if (data.message) {
+        const stageColor = getStageColor(data.current_stage);
+        appendLog(data.current_stage, data.message, stageColor);
+    }
+    
     // 更新阶段状态追踪器
     updateTrackerUI(pct);
+}
+
+// 根据阶段名称返回对应的日志颜色
+function getStageColor(stage) {
+    if (!stage) return "text-gray-300";
+    if (stage.includes("识别") || stage.includes("提取")) return "text-cyan-400";
+    if (stage.includes("LLM") || stage.includes("理解") || stage.includes("生成检索")) return "text-yellow-300";
+    if (stage.includes("搜索") || stage.includes("检索")) return "text-purple-400";
+    if (stage.includes("深度") || stage.includes("分析")) return "text-orange-400";
+    if (stage.includes("报告") || stage.includes("生成")) return "text-blue-300";
+    if (stage.includes("完成")) return "text-green-300";
+    return "text-gray-300";
+}
+
+// 追加一行日志到日志面板
+function appendLog(stage, message, colorClass) {
+    const logPanel = document.getElementById('progress-log');
+    if (!logPanel) return;
+    
+    const elapsed = getElapsedTime();
+    const line = document.createElement('div');
+    line.className = colorClass || "text-gray-300";
+    line.innerHTML = `[<span class="text-gray-500">${elapsed}</span>] <span class="text-blue-400">${stage}</span> ${message}`;
+    logPanel.appendChild(line);
+    
+    // 自动滚动到底部
+    logPanel.scrollTop = logPanel.scrollHeight;
+}
+
+// 获取已用时间字符串 mm:ss
+function getElapsedTime() {
+    if (!analysisStartTime) return "00:00";
+    const diff = Math.floor((Date.now() - analysisStartTime) / 1000);
+    const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+    const secs = String(diff % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+}
+
+// 启动计时器
+function startTimer() {
+    stopTimer();
+    timerInterval = setInterval(() => {
+        const timerEl = document.getElementById('log-timer');
+        if (timerEl) timerEl.innerText = getElapsedTime();
+    }, 1000);
+}
+
+// 停止计时器
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 }
 
 // 更新下方 5 个阶段的小图标
 function updateTrackerUI(pct) {
     const stages = [
-        { id: 1, maxPct: 15 }, // 材料理解
-        { id: 2, maxPct: 40 }, // 深度分析
-        { id: 3, maxPct: 60 }, // 风险情景
-        { id: 4, maxPct: 80 }, // 商业影响
-        { id: 5, maxPct: 95 }  // 生成报告
+        { id: 1, maxPct: 25 },  // 材料提取
+        { id: 2, maxPct: 55 },  // 联网检索
+        { id: 3, maxPct: 70 },  // 深度分析
+        { id: 4, maxPct: 85 },  // 风险评估
+        { id: 5, maxPct: 95 }   // 生成报告
     ];
+    
+    const emojis = ['📄', '🔍', '🧠', '⚠️', '📊'];
     
     for (const stage of stages) {
         const el = document.getElementById(`tracker-step-${stage.id}`);
@@ -221,11 +292,8 @@ function updateTrackerUI(pct) {
             el.querySelector('div').innerHTML = '✓';
         } else if (pct > (stage.id === 1 ? 0 : stages[stage.id-2].maxPct)) {
             el.classList.add('tracker-active');
-            // 恢复 emoji（简单处理，实际应用中可以保存原始 HTML）
-            const emojis = ['📄', '🔍', '⚠️', '💼', '📊'];
             el.querySelector('div').innerHTML = emojis[stage.id - 1];
         } else {
-            const emojis = ['📄', '🔍', '⚠️', '💼', '📊'];
             el.querySelector('div').innerHTML = emojis[stage.id - 1];
         }
     }
@@ -244,6 +312,16 @@ function showSuccess(result) {
         document.getElementById('success-title').innerText = result.title || "分析报告";
         document.getElementById('btn-view-report').href = result.report_url || "#";
         document.getElementById('btn-download-json').href = result.json_url || "#";
+        
+        const pdfBtn = document.getElementById('btn-download-pdf');
+        if (pdfBtn) {
+            if (result.pdf_url) {
+                pdfBtn.href = result.pdf_url;
+                pdfBtn.style.display = 'flex';
+            } else {
+                pdfBtn.style.display = 'none';
+            }
+        }
     }
 }
 
@@ -259,8 +337,10 @@ function showError(errorMsg) {
 // 重置应用状态
 function resetApp() {
     if (eventSource) eventSource.close();
+    stopTimer();
     currentTaskId = null;
     selectedFiles = [];
+    analysisStartTime = null;
     document.getElementById('file-list').innerHTML = '';
     
     const btnStart = document.getElementById('btn-start');
@@ -269,6 +349,14 @@ function resetApp() {
     
     document.getElementById('progress-bar').style.width = '0%';
     document.getElementById('progress-pct').innerText = '0%';
+    
+    // 清空日志面板
+    const logPanel = document.getElementById('progress-log');
+    if (logPanel) {
+        logPanel.innerHTML = '<div class="text-green-400">[<span class="text-gray-500">00:00</span>] <span class="text-blue-400">SYSTEM</span> 分析引擎已初始化，等待任务开始...</div>';
+    }
+    const timerEl = document.getElementById('log-timer');
+    if (timerEl) timerEl.innerText = '00:00';
     
     // 恢复顶部步骤
     document.getElementById('step-2').className = "flex items-center text-gray-400";
