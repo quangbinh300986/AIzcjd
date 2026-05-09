@@ -177,7 +177,13 @@
                 </div>
                 <h2 class="text-xl font-bold text-gray-900 mb-2">分析过程出错</h2>
                 <p class="text-gray-500 mb-6" id="error-message">在调用大模型或处理文件时发生错误。</p>
-                <button onclick="resetApp()" class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-gray-700 hover:bg-gray-50">返回重新开始</button>
+                <div class="flex items-center justify-center gap-4">
+                    <button onclick="retryAnalysis()" class="bg-blue-600 border border-transparent rounded-md shadow-sm py-2 px-6 inline-flex justify-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        重新分析（无需再传文件）
+                    </button>
+                    <button onclick="resetApp()" class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-gray-700 hover:bg-gray-50">返回重新开始</button>
+                </div>
             </div>
         </div>
 

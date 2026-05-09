@@ -64,3 +64,75 @@ Traceback (most recent call last):
   File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
     raise NotImplementedError
 NotImplementedError
+2026-05-09 18:08:21,261 - app - ERROR - 任务 8288c1e1 分析失败
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\app.py", line 140, in run_analysis_pipeline
+    await runner.run(on_progress=progress_callback)
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 391, in run
+    analysis_md_path = await self._generate_outline(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\api\services\task_runner.py", line 277, in _generate_outline
+    raise RuntimeError(f"Analysis generation failed: {stderr}")
+RuntimeError: Analysis generation failed: Traceback (most recent call last):
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\streams.py", line 372, in _wait
+    await waiter
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\core\llm_client.py", line 1221, in _call_openai_compatible
+    data = await response.json()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\client_reqrep.py", line 751, in json
+    await self.read()
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\client_reqrep.py", line 693, in read
+    self._body = await self.content.read()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\streams.py", line 446, in read
+    block = await self.readany()
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\streams.py", line 468, in readany
+    await self._wait("readany")
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\streams.py", line 371, in _wait
+    with self._timer:
+         ^^^^^^^^^^^
+  File "C:\APP\AIzcjd\.venv\Lib\site-packages\aiohttp\helpers.py", line 713, in __exit__
+    raise asyncio.TimeoutError from exc_val
+TimeoutError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\APP\AIzcjd\backend\core\generate_analysis_outline.py", line 822, in <module>
+    main()
+  File "C:\APP\AIzcjd\backend\core\generate_analysis_outline.py", line 818, in main
+    asyncio.run(async_main(args))
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lsf\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\generate_analysis_outline.py", line 753, in async_main
+    analysis = await build_llm_analysis(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\generate_analysis_outline.py", line 358, in build_llm_analysis
+    policy_analysis = await _chunk_and_analyze_parallel(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\generate_analysis_outline.py", line 225, in _chunk_and_analyze_parallel
+    chunking_result = await client.analyze(
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\llm_client.py", line 1173, in analyze
+    result = await self._call_gemini(prompt)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\llm_client.py", line 1182, in _call_gemini
+    return await self._call_openai_compatible(prompt)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\APP\AIzcjd\backend\core\llm_client.py", line 1239, in _call_openai_compatible
+    raise Exception(f"OpenAI API timeout after {self.config.timeout} seconds")
+Exception: OpenAI API timeout after 120 seconds
+

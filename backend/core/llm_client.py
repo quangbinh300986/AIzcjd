@@ -66,8 +66,8 @@ class LLMConfig:
     api_url: str = "https://generativelanguage.googleapis.com/v1beta"
     model: str = "gemini-3-flash-preview"
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
-    timeout: int = 120
+    max_tokens: Optional[int] = 16384
+    timeout: int = 300
     provider: str = "openai"  # "gemini" or "openai"
 
 

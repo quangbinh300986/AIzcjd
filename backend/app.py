@@ -178,7 +178,8 @@ async def start_analysis(task_id: str, background_tasks: BackgroundTasks, reques
         raise HTTPException(status_code=400, detail="任务正在运行中")
         
     audience = request.audience if request else "通用视角"
-    task_store.update(task_id, audience=audience)
+    task_store.update(task_id, audience=audience, status="running", progress=0, 
+                      current_stage="准备中", message="正在启动分析...", error="", result=None)
         
     background_tasks.add_task(run_analysis_pipeline, task_id)
     return {"task_id": task_id, "message": "已启动分析流水线"}

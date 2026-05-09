@@ -334,6 +334,52 @@ function showError(errorMsg) {
     document.getElementById('error-message').innerText = msg;
 }
 
+// 重新分析（复用已有 taskId，无需重新上传文件）
+async function retryAnalysis() {
+    if (!currentTaskId) {
+        alert("没有可重试的任务，请重新上传文件");
+        resetApp();
+        return;
+    }
+    
+    // 隐藏错误面板，显示进度面板
+    document.getElementById('panel-error').classList.add('hidden');
+    document.getElementById('panel-progress').classList.remove('hidden');
+    
+    // 重置进度条和日志
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-pct').innerText = '0%';
+    document.getElementById('stage-badge').innerText = '重新分析中';
+    document.getElementById('progress-msg').innerText = '正在使用已上传的文件重新启动分析...';
+    
+    const logPanel = document.getElementById('progress-log');
+    if (logPanel) {
+        logPanel.innerHTML = '<div class="text-green-400">[<span class="text-gray-500">00:00</span>] <span class="text-blue-400">RETRY</span> 正在使用已上传的文件重新启动分析...</div>';
+    }
+    
+    // 重启计时器
+    analysisStartTime = Date.now();
+    startTimer();
+    
+    try {
+        // 直接重新触发分析（文件已在服务器上）
+        const audience = document.getElementById('audience-select').value;
+        await fetch(`/api/analyze/${currentTaskId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audience: audience })
+        });
+        
+        appendLog("SYSTEM", "分析任务已重新提交，正在等待大模型响应...", "text-cyan-400");
+        connectSSE(currentTaskId);
+        
+    } catch (err) {
+        appendLog("ERROR", `重试失败: ${err.message}`, "text-red-400");
+        stopTimer();
+        showError("重试失败: " + err.message);
+    }
+}
+
 // 重置应用状态
 function resetApp() {
     if (eventSource) eventSource.close();

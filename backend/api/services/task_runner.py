@@ -312,6 +312,9 @@ class TaskRunner:
             
             if self.task_data.get("topic"):
                 args.extend(["--title", self.task_data["topic"]])
+                
+            if self.task_data.get("user_focus"):
+                args.extend(["--user-focus", self.task_data["user_focus"]])
             
             returncode, stdout, stderr = await self._run_script(
                 "render_llm_reports.py", args, script_dir=REPORTS_DIR
