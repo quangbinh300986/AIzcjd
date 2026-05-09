@@ -73,9 +73,11 @@ class TaskRunner:
         if self._progress_callback:
             self._progress_callback(stage, progress, message)
     
-    async def _run_script(self, script_name: str, args: list[str], script_dir: Path | None = None) -> tuple[int, str, str]:
-        """在线程池中运行 Python 脚本（兼容 Windows Uvicorn 事件循环）。"""
-        # 使用指定目录或默认 CORE_DIR
+    async def _run_script(
+        self, script_name: str, args: list[str], script_dir: Path | None = None,
+        stage_name: str = None, base_progress: int = None
+    ) -> tuple[int, str, str]:
+        """在线程池中运行 Python 脚本，并支持实时捕获日志以提供细颗粒度进度。"""
         base_dir = script_dir if script_dir else CORE_DIR
         script_path = base_dir / script_name
         
@@ -87,19 +89,45 @@ class TaskRunner:
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        
         def _blocking_run() -> tuple[int, str, str]:
             """在独立线程中同步执行子进程，避免 asyncio 子进程兼容性问题。"""
-            result = subprocess.run(
+            process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=str(base_dir),
                 env=env,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                bufsize=1,  # 行缓冲
             )
+            
+            stdout_lines = []
+            if process.stdout:
+                for line in iter(process.stdout.readline, ''):
+                    stdout_lines.append(line)
+                    line_clean = line.strip()
+                    # 如果有阶段名称，且发现了特定的打印日志，则触发细粒度进度回调
+                    if line_clean and stage_name and base_progress and loop:
+                        if "[LLM]" in line_clean or line_clean.startswith("🚀") or line_clean.startswith("✅"):
+                            msg = line_clean.replace("[LLM]", "").strip()
+                            if msg:
+                                loop.call_soon_threadsafe(
+                                    self._report_progress, stage_name, base_progress, msg
+                                )
+            
+            process.wait()
+            stderr_out = process.stderr.read() if process.stderr else ""
             return (
-                result.returncode,
-                result.stdout.decode("utf-8", errors="ignore"),
-                result.stderr.decode("utf-8", errors="ignore"),
+                process.returncode,
+                "".join(stdout_lines),
+                stderr_out,
             )
         
         # 使用 asyncio.to_thread 将阻塞调用放到线程池
@@ -227,7 +255,10 @@ class TaskRunner:
         
         self._report_progress("搜索互联网", 35, "搜索引擎已开始工作，正在抓取政策原文与历史同类文件，请耐心等待...")
         
-        returncode, stdout, stderr = await self._run_script("fetch_context_results.py", args)
+        returncode, stdout, stderr = await self._run_script(
+            "fetch_context_results.py", args,
+            stage_name="搜索互联网", base_progress=40
+        )
         
         if returncode != 0:
             # Not fatal, continue with whatever we have
@@ -269,9 +300,12 @@ class TaskRunner:
         if self.task_data.get("user_focus"):
             args.extend(["--user-focus", self.task_data["user_focus"]])
         
-        self._report_progress("LLM深度分析", 63, "大模型正在执行多维度推理: 词汇平替检测 + 定量指标对比 + 异常信号识别...预计30-60秒")
+        self._report_progress("LLM深度分析", 63, "大模型正在执行多维度推理: 词汇平替检测 + 定量指标对比 + 异常信号识别...")
         
-        returncode, stdout, stderr = await self._run_script("generate_analysis_outline.py", args)
+        returncode, stdout, stderr = await self._run_script(
+            "generate_analysis_outline.py", args, 
+            stage_name="LLM深度分析", base_progress=65
+        )
         
         if returncode != 0:
             raise RuntimeError(f"Analysis generation failed: {stderr}")
