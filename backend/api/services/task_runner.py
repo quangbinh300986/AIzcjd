@@ -84,10 +84,11 @@ class TaskRunner:
         if not script_path.exists():
             return 1, "", f"Script not found: {script_path}"
         
-        cmd = [sys.executable, str(script_path)] + args
+        cmd = [sys.executable, "-u", str(script_path)] + args
         
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUNBUFFERED"] = "1"
         
         try:
             loop = asyncio.get_running_loop()
@@ -115,7 +116,15 @@ class TaskRunner:
                     line_clean = line.strip()
                     # 如果有阶段名称，且发现了特定的打印日志，则触发细粒度进度回调
                     if line_clean and stage_name and base_progress and loop:
-                        if "[LLM]" in line_clean or line_clean.startswith("🚀") or line_clean.startswith("✅"):
+                        if (
+                            "[LLM]" in line_clean or 
+                            line_clean.startswith("🚀") or 
+                            line_clean.startswith("✅") or 
+                            line_clean.startswith("🔍") or 
+                            line_clean.startswith("✓") or
+                            line_clean.startswith("[")
+                        ):
+                            # Remove unnecessary prefixes for cleaner display
                             msg = line_clean.replace("[LLM]", "").strip()
                             if msg:
                                 loop.call_soon_threadsafe(
